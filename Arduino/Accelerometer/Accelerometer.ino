@@ -47,5 +47,5 @@ void loop() {
     GyX = Wire.read()<<8|Wire.read();
     GyY = Wire.read()<<8|Wire.read();
     GyZ = Wire.read()<<8|Wire.read();*/    
-    delay(500);
+    delay(50);
 }
