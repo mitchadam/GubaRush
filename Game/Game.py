@@ -534,8 +534,8 @@ backdropList.add(backdrop2)
 if arduino:
     eventFlags = EventFlags(port='/dev/tty.usbmodem14101',
                             up_threshold = 3000,
-                            down_threshold = 3000,
-                            gy_threshold = 2000,
+                            down_threshold = 4000,
+                            gy_threshold = 2500,
                             up_down_delay=1.5,
                             left_right_delay=1)
 

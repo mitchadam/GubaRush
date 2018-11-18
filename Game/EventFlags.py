@@ -75,7 +75,7 @@ class EventFlags:
 
         self.arduinoReader.read()
 
-       ''' if(self.record):
+        """ if(self.record):
             self.timeCount = time.perf_counter()
             self.record = False
         if(time.perf_counter() - self.timeCount < 2):
@@ -90,7 +90,7 @@ class EventFlags:
                 self.record = True
                 self.positiveCount = 0
                 self.negativeCount = 0
-                self.printS = False'''
+                self.printS = False"""
             
 
         if self.ignore:
