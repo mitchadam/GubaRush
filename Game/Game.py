@@ -32,7 +32,7 @@ fontTitle = pygame.font.Font("Sprites/PatrickHand-Regular.ttf", 100)
 
 
 fullGoomba = pygame.image.load("Sprites/fullbody.png").convert_alpha()
-AngelGoomba = pygame.image.load("Sprites/fullbody.png").convert_alpha()
+AngelGoomba = pygame.image.load("Sprites/dead.png").convert_alpha()
 
 
 fullGoomba = pygame.transform.scale(fullGoomba,(300,300))
@@ -63,8 +63,9 @@ class Angel(pygame.sprite.Sprite):
 
         self.image = AngelGoomba
         self.rect = self.image.get_rect()
-        self.rect.x = SCREENWIDTH/2 - 75
+        self.rect.x = SCREENWIDTH/2 - 150
         self.rect.y = SCREENHEIGHT
+        self.image = pygame.transform.scale(self.image, (300, 400))
 
     def update(self):
         self.rect.y -= 2
@@ -379,6 +380,8 @@ def GameOverScreen():
 
         screen.fill(BLACK)
 
+        angelList.update()
+        angelList.draw(screen)
 
         buff = fontTitle.render("GAME OVER", True, WHITE)
         w, h = fontTitle.size("GAME OVER")
@@ -389,8 +392,7 @@ def GameOverScreen():
         w, h = font.size("Your Score: 10")
         screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 210])
 
-        angelList.update()
-        angelList.draw(screen)
+
 
 
         pygame.display.flip()
