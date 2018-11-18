@@ -1,7 +1,10 @@
 import pygame, random
-# Let's import the Car Class
+
+from EventFlags import EventFlags
 
 pygame.init()
+
+arduino =False
 
 GREEN = (20, 255, 140)
 GREY = (210, 210, 210)
@@ -29,7 +32,7 @@ random.seed(None)
 # Prints the score
 font = pygame.font.Font("Sprites/PatrickHand-Regular.ttf", 30)
 fontTitle = pygame.font.Font("Sprites/PatrickHand-Regular.ttf", 100)
-
+fontScore = pygame.font.Font("Sprites/PatrickHand-Regular.ttf", 50)
 
 fullGoomba = pygame.image.load("Sprites/fullbody.png").convert_alpha()
 AngelGoomba = pygame.image.load("Sprites/dead.png").convert_alpha()
@@ -45,8 +48,10 @@ obstacleHigh = pygame.image.load("Sprites/obstacle_high.png").convert_alpha()
 obstacleLowShadow = pygame.image.load("Sprites/obstacle_low_shadow.png").convert_alpha()
 obstacleHighShadow = pygame.image.load("Sprites/obstacle_high_shadow.png").convert_alpha()
 
+heart = pygame.image.load("Sprites/heart.png").convert_alpha()
 
 background = pygame.image.load("Sprites/background.png").convert()
+deathBackground = pygame.image.load("Sprites/dead_background.png").convert()
 
 class Angel(pygame.sprite.Sprite):
 
@@ -68,7 +73,8 @@ class Angel(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (300, 400))
 
     def update(self):
-        self.rect.y -= 2
+        if self.rect.y >= 220:
+            self.rect.y -= 4
 
 
 class Player(pygame.sprite.Sprite):
@@ -85,7 +91,7 @@ class Player(pygame.sprite.Sprite):
         # This could also be an image loaded from the disk.\
         self.image = run1Goomba
         self.rect = self.image.get_rect()
-        self.height = 150
+        self.height = 200
         self.width = 150
         self.lane = 1
         self.lanePos = [(SCREENWIDTH / 6)-75, (SCREENWIDTH / 2)-75, (5*(SCREENWIDTH / 6))-75]
@@ -96,6 +102,8 @@ class Player(pygame.sprite.Sprite):
         self.costumeCount = 0
         self.actionTime = 400/FALLSPEED
         self.speed = 0
+        self.image = pygame.transform.scale(self.image, (self.width, self.height))
+
 
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y
@@ -262,9 +270,6 @@ class InAir(pygame.sprite.Sprite):
 
 
 
-
-
-
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y
 
@@ -367,33 +372,17 @@ def StartScreen():
                     start = False
                     break
 
-def GameOverScreen():
-    start = True
 
-    angelGoomba = Angel()
-    angelList = pygame.sprite.Group()
+def CalibrateScreen():
+    counter = 0
+    while counter <1:
+        counter +=1
+        backdropList.update()
+        backdropList.draw(screen)
 
-    angelList.add(angelGoomba)
-
-
-    while start:
-
-        screen.fill(BLACK)
-
-        angelList.update()
-        angelList.draw(screen)
-
-        buff = fontTitle.render("GAME OVER", True, WHITE)
-        w, h = fontTitle.size("GAME OVER")
-        screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 90])
-
-        ScoreStr = "Your Score :" + str(score)
-        buff = font.render(ScoreStr, True, WHITE)
-        w, h = font.size("Your Score: 10")
-        screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 210])
-
-
-
+        buff = font.render("Calibrating Hardware...", True, WHITE)
+        w, h = font.size("Calibrating Hardware...")
+        screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 60])
 
         pygame.display.flip()
 
@@ -407,14 +396,56 @@ def GameOverScreen():
                     start = False
                     break
 
+    if not arduino:
+        #pygame.time.delay(5000)
+        pass
+    else:
+        eventFlags.calibrate()
 
-# add later for better code
-def TrackScore():
-    pass
 
-def NewObs():
-    pass
 
+def GameOverScreen(score):
+    start = True
+
+    angelGoomba = Angel()
+    angelList = pygame.sprite.Group()
+
+    angelList.add(angelGoomba)
+
+
+    while start:
+
+        screen.blit(deathBackground,(0, 0))
+
+
+        angelList.update()
+        angelList.draw(screen)
+
+        buff = fontTitle.render("GAME OVER", True, WHITE)
+        w, h = fontTitle.size("GAME OVER")
+        screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 20])
+
+        buff = font.render("Press Enter To Play Again", True, WHITE)
+        w, h = font.size("Press Enter To Play Again")
+        screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 150])
+
+        ScoreStr = "Your Score: " + str(score)
+        buff = font.render(ScoreStr, True, WHITE)
+        w, h = font.size("Your Score: 10")
+        screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 210])
+
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            # Close window if click x-button
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    RunGame()
+                    break
 
 playerList = pygame.sprite.Group()
 lowObstacleList = pygame.sprite.Group()
@@ -428,191 +459,222 @@ backdrop1 = BackDrop()
 backdrop2 = BackDrop()
 backdrop2.rect.y = -SCREENHEIGHT
 
+
 backdropList.add(backdrop1)
 backdropList.add(backdrop2)
 
 
-# Inital start in center
+if arduino:
+    eventFlags = EventFlags(port='/dev/tty.usbmodem14101',
+                            x_threshold = 3000,
+                            y_threshold = 3000,
+                            z_threshold = 3000)
 
 playerList.add(player1)
 
 
 # Allowing the user to close the window...
-carryOn = True
+def RunGame():
+    carryOn = True
 
-previousObs = -1
+    previousObs = -1
 
-score = 0
-scoreCounter = 0
+    score = 0
+    scoreCounter = 0
 
-lane0 = True
-lane0Counter =0
-lane1 = True
-lane1Counter =0
-lane2 = True
-lane2Counter =0
-laneResetValue = 600/FALLSPEED
+    livesCounter =3
 
-StartScreen()
-while carryOn:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            carryOn = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
+    lane0 = True
+    lane0Counter =0
+    lane1 = True
+    lane1Counter =0
+    lane2 = True
+    lane2Counter =0
+    laneResetValue = 600/FALLSPEED
+
+    StartScreen()
+    CalibrateScreen()
+
+
+    while carryOn:
+        if arduino:
+            eventFlags.check()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                carryOn = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT :
+                    player1.ChangeLane('left')
+                elif event.key == pygame.K_RIGHT:
+                    player1.ChangeLane('right')
+                elif event.key == pygame.K_UP:
+                    player1.Jump()
+                elif event.key == pygame.K_DOWN:
+                    player1.Duck()
+
+        if arduino:
+            if eventFlags.left():
                 player1.ChangeLane('left')
-            elif event.key == pygame.K_RIGHT:
+                print('yoooo')
+            elif eventFlags.right():
                 player1.ChangeLane('right')
-            elif event.key == pygame.K_UP:
+            elif eventFlags.up():
                 player1.Jump()
-            elif event.key == pygame.K_DOWN:
+            elif eventFlags.down():
                 player1.Duck()
 
-
-    # Handles addition of obstacles
-    rand = random.randint(0,1000)
-    shadowshift = 15
-
-
-    if (rand< OBJECTPROB and  lane0):
-        lane0 = False
-        if (rand % 2 == 0):
-            obstacle = OnGround()
-            obstacleShadow = OnGroundShadow()
-
-            obstacle.rect.x = obstacle.lanePos[0]
-            obstacleShadow.rect.x = obstacleShadow.lanePos[0] + shadowshift
-
-            lowObstacleList.add(obstacle)
-            ShadowList.add(obstacleShadow)
-
-            all_obstacles_list.add(obstacle)
-        else:
-            obstacle = InAir()
-            obstacleShadow = InAirShadow()
-
-            obstacle.rect.x = obstacle.lanePos[0]
-            obstacleShadow.rect.x = obstacleShadow.lanePos[0] + shadowshift
-
-            highObstacleList.add(obstacle)
-            ShadowList.add(obstacleShadow)
-
-            all_obstacles_list.add(obstacle)
+        # Handles addition of obstacles
+        rand = random.randint(0,1000)
+        shadowshift = 15
 
 
-    elif(rand < 2*OBJECTPROB and lane1):
-        lane1 = False
-        if (rand % 2 == 0):
-            obstacle = OnGround()
-            obstacleShadow = OnGroundShadow()
+        if (rand< OBJECTPROB and  lane0):
+            lane0 = False
+            if (rand % 2 == 0):
+                obstacle = OnGround()
+                obstacleShadow = OnGroundShadow()
 
-            obstacle.rect.x = obstacle.lanePos[1]
-            obstacleShadow.rect.x = obstacleShadow.lanePos[1] + shadowshift
+                obstacle.rect.x = obstacle.lanePos[0]
+                obstacleShadow.rect.x = obstacleShadow.lanePos[0] + shadowshift
 
-            lowObstacleList.add(obstacle)
-            ShadowList.add(obstacleShadow)
+                lowObstacleList.add(obstacle)
+                ShadowList.add(obstacleShadow)
 
-            all_obstacles_list.add(obstacle)
-        else:
-            obstacle = InAir()
-            obstacleShadow = InAirShadow()
+                all_obstacles_list.add(obstacle)
+            else:
+                obstacle = InAir()
+                obstacleShadow = InAirShadow()
 
-            obstacle.rect.x = obstacle.lanePos[1]
-            obstacleShadow.rect.x = obstacleShadow.lanePos[1] + shadowshift
+                obstacle.rect.x = obstacle.lanePos[0]
+                obstacleShadow.rect.x = obstacleShadow.lanePos[0] + shadowshift
 
-            highObstacleList.add(obstacle)
-            ShadowList.add(obstacleShadow)
+                highObstacleList.add(obstacle)
+                ShadowList.add(obstacleShadow)
 
-            all_obstacles_list.add(obstacle)
-
-    elif(rand <3*OBJECTPROB and lane2):
-        lane2 = False
-        if (rand % 2 ==0):
-            obstacle = OnGround()
-            obstacleShadow = OnGroundShadow()
-
-            obstacle.rect.x = obstacle.lanePos[2]
-            obstacleShadow.rect.x = obstacleShadow.lanePos[2] + shadowshift
-
-            lowObstacleList.add(obstacle)
-            ShadowList.add(obstacleShadow)
-
-            all_obstacles_list.add(obstacle)
-        else:
-            obstacle = InAir()
-            obstacleShadow = InAirShadow()
-
-            obstacle.rect.x = obstacle.lanePos[2]
-            obstacleShadow.rect.x = obstacleShadow.lanePos[2] + shadowshift
-
-            highObstacleList.add(obstacle)
-            ShadowList.add(obstacleShadow)
-
-            all_obstacles_list.add(obstacle)
+                all_obstacles_list.add(obstacle)
 
 
-    # this makes sure obstacles dont overlap
-    if (not lane0):
-        lane0Counter +=1
-        if lane0Counter >= laneResetValue:
-            lane0Counter = 0
-            lane0 = True
+        elif(rand < 2*OBJECTPROB and lane1):
+            lane1 = False
+            if (rand % 2 == 0):
+                obstacle = OnGround()
+                obstacleShadow = OnGroundShadow()
 
-    if (not lane1):
-        lane1Counter +=1
-        if lane1Counter >= laneResetValue:
-            lane1Counter = 0
-            lane1 = True
+                obstacle.rect.x = obstacle.lanePos[1]
+                obstacleShadow.rect.x = obstacleShadow.lanePos[1] + shadowshift
 
-    if (not lane2):
-        lane2Counter +=1
-        if lane2Counter >= laneResetValue:
-            lane2Counter = 0
-            lane2 = True
+                lowObstacleList.add(obstacle)
+                ShadowList.add(obstacleShadow)
 
-    # Checks Collisions
-    for obs in all_obstacles_list:
-        hit = player1.CheckCollide(obs.rect.x, obs.width, obs.rect.y, obs.height, obs.label)
-        if hit:
-            # carryOn = False
-            print('COLLIDE')
+                all_obstacles_list.add(obstacle)
+            else:
+                obstacle = InAir()
+                obstacleShadow = InAirShadow()
 
+                obstacle.rect.x = obstacle.lanePos[1]
+                obstacleShadow.rect.x = obstacleShadow.lanePos[1] + shadowshift
 
-    # Game Logic
-    playerList.update()
-    lowObstacleList.update()
-    highObstacleList.update()
-    backdropList.update()
-    ShadowList.update()
+                highObstacleList.add(obstacle)
+                ShadowList.add(obstacleShadow)
 
-    # Drawing on Screen
-    screen.fill(BLACK)
-    pygame.draw.line(screen,BLACK,[SCREENWIDTH/3,0],[SCREENWIDTH/3,SCREENHEIGHT],5)
-    pygame.draw.line(screen,BLACK,[2*SCREENWIDTH/3,0],[2*SCREENWIDTH/3,SCREENHEIGHT],5)
+                all_obstacles_list.add(obstacle)
 
+        elif(rand <3*OBJECTPROB and lane2):
+            lane2 = False
+            if (rand % 2 ==0):
+                obstacle = OnGround()
+                obstacleShadow = OnGroundShadow()
 
+                obstacle.rect.x = obstacle.lanePos[2]
+                obstacleShadow.rect.x = obstacleShadow.lanePos[2] + shadowshift
 
+                lowObstacleList.add(obstacle)
+                ShadowList.add(obstacleShadow)
 
+                all_obstacles_list.add(obstacle)
+            else:
+                obstacle = InAir()
+                obstacleShadow = InAirShadow()
 
-    # Now let's draw all the sprites in one go. (For now we only have 1 sprite!)
-    backdropList.draw(screen)
-    ShadowList.draw(screen)
-    lowObstacleList.draw(screen)
-    playerList.draw(screen)
-    highObstacleList.draw(screen)
+                obstacle.rect.x = obstacle.lanePos[2]
+                obstacleShadow.rect.x = obstacleShadow.lanePos[2] + shadowshift
 
-    scoreCounter += 1
-    if (scoreCounter % 30 == 0):
-        score += 1
-    score_tracker = "Score: " + str(score)
-    score_board = font.render(str(score_tracker), True, BLACK)
-    screen.blit(score_board, [SCREENWIDTH - 120, 20])
+                highObstacleList.add(obstacle)
+                ShadowList.add(obstacleShadow)
 
-    # Refresh Screen
-    pygame.display.flip()
-
-    # Number of frames per secong e.g. 60
-    clock.tick(30)
+                all_obstacles_list.add(obstacle)
 
 
-GameOverScreen()
+        # this makes sure obstacles dont overlap
+        if (not lane0):
+            lane0Counter +=1
+            if lane0Counter >= laneResetValue:
+                lane0Counter = 0
+                lane0 = True
+
+        if (not lane1):
+            lane1Counter +=1
+            if lane1Counter >= laneResetValue:
+                lane1Counter = 0
+                lane1 = True
+
+        if (not lane2):
+            lane2Counter +=1
+            if lane2Counter >= laneResetValue:
+                lane2Counter = 0
+                lane2 = True
+
+        # Checks Collisions
+        for obs in all_obstacles_list:
+            hit = player1.CheckCollide(obs.rect.x, obs.width, obs.rect.y, obs.height, obs.label)
+            if hit:
+                all_obstacles_list.remove(obs)
+                hit = False
+                livesCounter -= 1
+                print('COLLIDE')
+                if livesCounter <=0:
+                    pass # Game Over
+                    carryOn = False
+                    break
+
+
+        # Game Logic
+        playerList.update()
+        lowObstacleList.update()
+        highObstacleList.update()
+        backdropList.update()
+        ShadowList.update()
+
+        # Drawing on Screen
+        screen.fill(BLACK)
+        pygame.draw.line(screen,BLACK,[SCREENWIDTH/3,0],[SCREENWIDTH/3,SCREENHEIGHT],5)
+        pygame.draw.line(screen,BLACK,[2*SCREENWIDTH/3,0],[2*SCREENWIDTH/3,SCREENHEIGHT],5)
+
+
+        # Now let's draw all the sprites in one go. (For now we only have 1 sprite!)
+        backdropList.draw(screen)
+        ShadowList.draw(screen)
+        lowObstacleList.draw(screen)
+        playerList.draw(screen)
+        highObstacleList.draw(screen)
+
+        scoreCounter += 1
+        if (scoreCounter % 30 == 0):
+            score += 1
+        score_tracker = "Score: " + str(score)
+        w, h = fontScore.size("Score: 10")
+        score_board = fontScore.render(str(score_tracker), True, BLACK)
+        screen.blit(score_board, [SCREENWIDTH - w - 10, 20])
+
+        for i in range(0,livesCounter):
+            screen.blit(heart,(40 + 100*i, 20))
+
+        # Refresh Screen
+        pygame.display.flip()
+
+        # Number of frames per secong e.g. 60
+        clock.tick(30)
+
+
+    GameOverScreen(score)
+RunGame()
