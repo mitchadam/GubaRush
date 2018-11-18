@@ -10,9 +10,9 @@ RED = (255, 0, 0)
 PURPLE = (255, 0, 255)
 BLACK = (0, 0, 0)
 
-FALLSPEED = 10
+FALLSPEED = 8
 
-OBJECTPROB = 3
+OBJECTPROB = 10
 
 SCREENWIDTH = 1200
 SCREENHEIGHT = 800
@@ -27,12 +27,47 @@ pygame.display.set_caption("GOOMBA RUSH")
 random.seed(None)
 
 # Prints the score
-font = pygame.font.Font("PatrickHand-Regular.ttf", 30)
+font = pygame.font.Font("Sprites/PatrickHand-Regular.ttf", 30)
+fontTitle = pygame.font.Font("Sprites/PatrickHand-Regular.ttf", 100)
 
 
+fullGoomba = pygame.image.load("Sprites/fullbody.png").convert_alpha()
+AngelGoomba = pygame.image.load("Sprites/fullbody.png").convert_alpha()
 
-# This will be a list that will contain all the sprites we intend to use in our game.
-all_sprites_list = pygame.sprite.Group()
+
+fullGoomba = pygame.transform.scale(fullGoomba,(300,300))
+run1Goomba = pygame.image.load("Sprites/backRun.png").convert_alpha()
+run2Goomba = pygame.image.load("Sprites/backRun2.png").convert_alpha()
+jumpGoomba = pygame.image.load("Sprites/jump.png").convert_alpha()
+duckGoomba = pygame.image.load("Sprites/duck.png").convert_alpha()
+obstacleLow = pygame.image.load("Sprites/obstacle_low.png").convert_alpha()
+obstacleHigh = pygame.image.load("Sprites/obstacle_high.png").convert_alpha()
+obstacleLowShadow = pygame.image.load("Sprites/obstacle_low_shadow.png").convert_alpha()
+obstacleHighShadow = pygame.image.load("Sprites/obstacle_high_shadow.png").convert_alpha()
+
+
+background = pygame.image.load("Sprites/background.png").convert()
+
+class Angel(pygame.sprite.Sprite):
+
+    # Constructor. Pass in the color of the block,
+    # and its x and y position
+    def __init__(self):
+        # Call the parent class (Sprite) constructor
+        pygame.sprite.Sprite.__init__(self)
+
+        # Create an image of the block, and fill it with a color.
+        # This could also be an image loaded from the disk.
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+
+        self.image = AngelGoomba
+        self.rect = self.image.get_rect()
+        self.rect.x = SCREENWIDTH/2 - 75
+        self.rect.y = SCREENHEIGHT
+
+    def update(self):
+        self.rect.y -= 2
 
 
 class Player(pygame.sprite.Sprite):
@@ -41,44 +76,51 @@ class Player(pygame.sprite.Sprite):
     # and its x and y position
     def __init__(self):
 
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
+        # Call the parent class (Sprite) constructor
+        pygame.sprite.Sprite.__init__(self)
 
 
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.\
-       self.height = 20
-       self.width =20
-       self.image = pygame.Surface([self.width, self.height])
-       self.image.fill(RED)
-       self.lane = 1
-       self.lanePos = [ SCREENWIDTH / 6, SCREENWIDTH / 2, 5*(SCREENWIDTH / 6)]
-       self.collide = False
-       self.state = 0 #0 - run, 1 -air, -1 - ground
-       self.counter = 0
+        # Create an image of the block, and fill it with a color.
+        # This could also be an image loaded from the disk.\
+        self.image = run1Goomba
+        self.rect = self.image.get_rect()
+        self.height = 150
+        self.width = 150
+        self.lane = 1
+        self.lanePos = [(SCREENWIDTH / 6)-75, (SCREENWIDTH / 2)-75, (5*(SCREENWIDTH / 6))-75]
+        self.state = 0 #0 - run, 1 -air, -1 - ground
+        self.counter = 0
+        self.costumes = [run1Goomba, run2Goomba]
+        self.costumeState = 0
+        self.costumeCount = 0
+        self.actionTime = 400/FALLSPEED
+        self.speed = 0
 
-
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
-       self.rect.x = self.lanePos[self.lane]
-       self.rect.y = SCREENHEIGHT - 50
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+        self.rect = self.image.get_rect()
+        self.rect.x = self.lanePos[self.lane]
+        self.rect.y = SCREENHEIGHT - 160
 
 
     def ChangeLane(self,direction):
 
         if(direction == 'right'):
             if(self.lane != 2):
-                self.lane +=1
+                self.lane += 1
+                self.speed = 1
 
         elif(direction == 'left'):
             if (self.lane != 0):
                 self.lane -=1
+                self.speed = -1
+
 
         self.rect.x = self.lanePos[self.lane]
 
     def Jump(self):
 
+        self.rect.y -=0.5
         self.state = 1
 
     def Duck(self):
@@ -87,8 +129,8 @@ class Player(pygame.sprite.Sprite):
 
     def CheckCollide(self,x,w,y,h,label):
 
-        if(self.rect.x == x and self.state != -1*label):
-            if(y+h>= self.rect.y and y+h <= self.rect.y+self.height) or (y >= self.rect.y and y <= self.rect.y+self.height):
+        if(abs((self.rect.x -x)) < 100 and self.state != -1*label):
+            if(y+h >= self.rect.y and y+h <= self.rect.y+self.height) or (y >= self.rect.y and y <= self.rect.y + self.height-15):
                 return True
 
         return False
@@ -96,19 +138,30 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         if(self.state != 0):
             self.counter+=1
-            if(self.counter >= 40):
+            if(self.counter >= self.actionTime):
                 self.state = 0
                 self.counter =0
             if(self.state == 1):
-            # This means he is jumping
-                self.image.fill(PURPLE)
-            elif (self.state == -1):
-            #This means he is ducking
-                self.image.fill(GREY)
+                # This means he is jumping
+                self.image = jumpGoomba
 
+                if (self.rect.y < SCREENHEIGHT - 160):
+                    self.rect.y -= 5 -0.26*self.counter
+
+            elif (self.state == -1):
+                #This means he is ducking
+                self.image = duckGoomba
         else:
             # This means he is running
-            self.image.fill(RED)
+            self.costumeCount +=1
+            if self.costumeCount % 5 == 0:
+                if self.costumeState == 0:
+                    self.costumeState = 1
+                elif self.costumeState == 1:
+                    self.costumeState =0
+                self.image = self.costumes[self.costumeState]
+            self.rect.y = SCREENHEIGHT - 160
+
 
 class OnGround(pygame.sprite.Sprite):
 
@@ -116,31 +169,69 @@ class OnGround(pygame.sprite.Sprite):
     # and its x and y position
     def __init__(self):
 
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
+        # Call the parent class (Sprite) constructor
+        pygame.sprite.Sprite.__init__(self)
 
 
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.
-       self.label = -1 #0 - run, 1 -air, -1 - ground
-       self.width = 20
-       self.height = 20
-       self.image = pygame.Surface([self.width, self.height])
-       self.image.fill(BLACK)
-       self.lanePos = [SCREENWIDTH / 6, SCREENWIDTH / 2, 5 * (SCREENWIDTH / 6)]
+        # Create an image of the block, and fill it with a color.
+        # This could also be an image loaded from the disk.
+        self.label = -1 #0 - run, 1 -air, -1 - ground
+        self.width = 150
+        self.newWidth = 200
+        self.height = 150
+        self.image = pygame.Surface([self.width, self.height])
+        self.lanePos = [(SCREENWIDTH / 6)-self.newWidth/2, (SCREENWIDTH / 2)-self.newWidth/2, (5 * (SCREENWIDTH / 6))-self.newWidth/2]
+
+        self.rect = self.image.get_rect()
+        self.image = obstacleLow
+        self.image = pygame.transform.scale(self.image, (self.newWidth, 150))
 
 
 
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
-       self.rect.y = -50
+
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+        self.rect.y = -200
 
     def update(self):
         self.rect.y += FALLSPEED
         if (self.rect.y >= SCREENHEIGHT+20):
             self.kill()
 
+
+class OnGroundShadow(pygame.sprite.Sprite):
+
+    # Constructor. Pass in the color of the block,
+    # and its x and y position
+    def __init__(self):
+
+        # Call the parent class (Sprite) constructor
+        pygame.sprite.Sprite.__init__(self)
+
+
+        # Create an image of the block, and fill it with a color.
+        # This could also be an image loaded from the disk.
+        self.label = -1 #0 - run, 1 -air, -1 - ground
+        self.width = 150
+        self.height = 150
+        self.image = pygame.Surface([self.width, self.height])
+        self.lanePos = [(SCREENWIDTH / 6)-self.width/2, (SCREENWIDTH / 2)-self.width/2, (5 * (SCREENWIDTH / 6))-self.width/2]
+
+        self.rect = self.image.get_rect()
+        self.image = obstacleLowShadow
+        self.image = pygame.transform.scale(self.image, (190, 60))
+
+
+
+
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+        self.rect.y = -200 + self.height
+
+    def update(self):
+        self.rect.y += FALLSPEED
+        if (self.rect.y >= SCREENHEIGHT+20):
+            self.kill()
 
 
 
@@ -150,34 +241,119 @@ class InAir(pygame.sprite.Sprite):
     # and its x and y position
     def __init__(self):
 
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
+        # Call the parent class (Sprite) constructor
+        pygame.sprite.Sprite.__init__(self)
 
 
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.
-       self.label = 1  # 0 - run, 1 -air, -1 - ground
-       self.width = 20
-       self.height = 20
-       self.image = pygame.Surface([self.width, self.height])
-       self.image.fill(WHITE)
-       self.lanePos = [SCREENWIDTH / 6, SCREENWIDTH / 2, 5 * (SCREENWIDTH / 6)]
+        # Create an image of the block, and fill it with a color.
+        # This could also be an image loaded from the disk.
+        self.label = 1  # 0 - run, 1 -air, -1 - ground
+        self.width = 150
+        self.newWidth = 200
+        self.height = 150
+        self.image = pygame.Surface([self.width, self.height])
+
+        self.lanePos = [(SCREENWIDTH / 6)-self.newWidth/2, (SCREENWIDTH / 2)-self.newWidth/2, (5 * (SCREENWIDTH / 6))-self.newWidth/2]
+        self.rect = self.image.get_rect()
+        self.rect.y = -200
+        self.image = obstacleHigh
+        self.image = pygame.transform.scale(self.image, (self.newWidth, 150))
 
 
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
+
+
+
+
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
 
     def update(self):
         self.rect.y += FALLSPEED
         if (self.rect.y >= SCREENHEIGHT+20):
             self.kill()
 
+class InAirShadow(pygame.sprite.Sprite):
+
+    # Constructor. Pass in the color of the block,
+    # and its x and y position
+    def __init__(self):
+
+        # Call the parent class (Sprite) constructor
+        pygame.sprite.Sprite.__init__(self)
+
+
+        # Create an image of the block, and fill it with a color.
+        # This could also be an image loaded from the disk.
+        self.label = 1  # 0 - run, 1 -air, -1 - ground
+        self.width = 150
+        self.height = 150
+        self.image = pygame.Surface([self.width, self.height])
+
+        self.lanePos = [(SCREENWIDTH / 6)-self.width/2, (SCREENWIDTH / 2)-self.width/2, (5 * (SCREENWIDTH / 6))-self.width/2]
+        self.rect = self.image.get_rect()
+        self.rect.y = -200 + self.height
+        self.image = obstacleHighShadow
+        self.image = pygame.transform.scale(self.image, (200, 100))
+
+
+        self.counter =0
+
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+
+    def update(self):
+        self.rect.y += FALLSPEED
+        if (self.rect.y >= SCREENHEIGHT+20):
+            self.kill()
+
+        self.counter +=1
+
+
+class BackDrop(pygame.sprite.Sprite):
+
+    # Constructor. Pass in the color of the block,
+    # and its x and y position
+    def __init__(self,):
+        # Call the parent class (Sprite) constructor
+        pygame.sprite.Sprite.__init__(self)
+
+        # Create an image of the block, and fill it with a color.
+        # This could also be an image loaded from the disk.
+        self.image = background
+
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        self.rect.y += FALLSPEED
+
+        if self.rect.y >= SCREENHEIGHT:
+            self.rect.y = -SCREENHEIGHT
+
 def StartScreen():
     start = True
     while start:
 
-        screen.fill(BLACK)
+        backdropList.update()
+        backdropList.draw(screen)
+
+        buff = font.render("Welcome To", True, WHITE)
+        w,h =font.size("welcome to")
+        screen.blit(buff, [SCREENWIDTH/2 - w/2, 60])
+
+        buff = fontTitle.render("GOOMBA RUSH", True, WHITE)
+        w, h = fontTitle.size("GOOMBA RUSH")
+        screen.blit(buff, [SCREENWIDTH/2 - w/2, 90])
+
+        buff = font.render("Press Enter To Play", True, WHITE)
+        w, h = font.size("Press Enter To Play")
+        screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 300])
+
+        screen.blit(fullGoomba,(SCREENWIDTH/2-130, SCREENHEIGHT/2))
+
+
+
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -192,9 +368,31 @@ def StartScreen():
 
 def GameOverScreen():
     start = True
+
+    angelGoomba = Angel()
+    angelList = pygame.sprite.Group()
+
+    angelList.add(angelGoomba)
+
+
     while start:
 
         screen.fill(BLACK)
+
+
+        buff = fontTitle.render("GAME OVER", True, WHITE)
+        w, h = fontTitle.size("GAME OVER")
+        screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 90])
+
+        ScoreStr = "Your Score :" + str(score)
+        buff = font.render(ScoreStr, True, WHITE)
+        w, h = font.size("Your Score: 10")
+        screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 210])
+
+        angelList.update()
+        angelList.draw(screen)
+
+
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -216,16 +414,25 @@ def NewObs():
     pass
 
 
-all_sprites_list = pygame.sprite.Group()
-all_obstacles_list =pygame.sprite.Group()
+playerList = pygame.sprite.Group()
+lowObstacleList = pygame.sprite.Group()
+highObstacleList = pygame.sprite.Group()
+all_obstacles_list = pygame.sprite.Group()
+backdropList = pygame.sprite.Group()
+ShadowList = pygame.sprite.Group()
 
 player1 = Player()
-# box1 = OnGround((BLACK), 20, 20)
+backdrop1 = BackDrop()
+backdrop2 = BackDrop()
+backdrop2.rect.y = -SCREENHEIGHT
+
+backdropList.add(backdrop1)
+backdropList.add(backdrop2)
+
 
 # Inital start in center
 
-all_sprites_list.add(player1)
-# all_sprites_list.add(box1)
+playerList.add(player1)
 
 
 # Allowing the user to close the window...
@@ -235,6 +442,14 @@ previousObs = -1
 
 score = 0
 scoreCounter = 0
+
+lane0 = True
+lane0Counter =0
+lane1 = True
+lane1Counter =0
+lane2 = True
+lane2Counter =0
+laneResetValue = 600/FALLSPEED
 
 StartScreen()
 while carryOn:
@@ -251,64 +466,138 @@ while carryOn:
             elif event.key == pygame.K_DOWN:
                 player1.Duck()
 
+
     # Handles addition of obstacles
-    rand = random.randint(0,100)
+    rand = random.randint(0,1000)
+    shadowshift = 15
 
 
-    if (rand< OBJECTPROB and previousObs != 0):
-        previousObs = 0
-        if (rand % 2 ==0):
+    if (rand< OBJECTPROB and  lane0):
+        lane0 = False
+        if (rand % 2 == 0):
             obstacle = OnGround()
+            obstacleShadow = OnGroundShadow()
+
             obstacle.rect.x = obstacle.lanePos[0]
-            all_sprites_list.add(obstacle)
+            obstacleShadow.rect.x = obstacleShadow.lanePos[0] + shadowshift
+
+            lowObstacleList.add(obstacle)
+            ShadowList.add(obstacleShadow)
+
             all_obstacles_list.add(obstacle)
         else:
             obstacle = InAir()
+            obstacleShadow = InAirShadow()
+
             obstacle.rect.x = obstacle.lanePos[0]
-            all_sprites_list.add(obstacle)
+            obstacleShadow.rect.x = obstacleShadow.lanePos[0] + shadowshift
+
+            highObstacleList.add(obstacle)
+            ShadowList.add(obstacleShadow)
+
             all_obstacles_list.add(obstacle)
 
-    elif(rand < 2*OBJECTPROB and previousObs != 1):
-        previousObs = 1
-        if (rand % 2 ==0):
+
+    elif(rand < 2*OBJECTPROB and lane1):
+        lane1 = False
+        if (rand % 2 == 0):
             obstacle = OnGround()
+            obstacleShadow = OnGroundShadow()
+
             obstacle.rect.x = obstacle.lanePos[1]
-            all_sprites_list.add(obstacle)
+            obstacleShadow.rect.x = obstacleShadow.lanePos[1] + shadowshift
+
+            lowObstacleList.add(obstacle)
+            ShadowList.add(obstacleShadow)
+
             all_obstacles_list.add(obstacle)
         else:
             obstacle = InAir()
+            obstacleShadow = InAirShadow()
+
             obstacle.rect.x = obstacle.lanePos[1]
-            all_sprites_list.add(obstacle)
+            obstacleShadow.rect.x = obstacleShadow.lanePos[1] + shadowshift
+
+            highObstacleList.add(obstacle)
+            ShadowList.add(obstacleShadow)
+
             all_obstacles_list.add(obstacle)
-    elif(rand <3*OBJECTPROB and previousObs != 2):
-        previousObs = 2
+
+    elif(rand <3*OBJECTPROB and lane2):
+        lane2 = False
         if (rand % 2 ==0):
             obstacle = OnGround()
+            obstacleShadow = OnGroundShadow()
+
             obstacle.rect.x = obstacle.lanePos[2]
-            all_sprites_list.add(obstacle)
+            obstacleShadow.rect.x = obstacleShadow.lanePos[2] + shadowshift
+
+            lowObstacleList.add(obstacle)
+            ShadowList.add(obstacleShadow)
+
             all_obstacles_list.add(obstacle)
         else:
             obstacle = InAir()
+            obstacleShadow = InAirShadow()
+
             obstacle.rect.x = obstacle.lanePos[2]
-            all_sprites_list.add(obstacle)
+            obstacleShadow.rect.x = obstacleShadow.lanePos[2] + shadowshift
+
+            highObstacleList.add(obstacle)
+            ShadowList.add(obstacleShadow)
+
             all_obstacles_list.add(obstacle)
 
+
+    # this makes sure obstacles dont overlap
+    if (not lane0):
+        lane0Counter +=1
+        if lane0Counter >= laneResetValue:
+            lane0Counter = 0
+            lane0 = True
+
+    if (not lane1):
+        lane1Counter +=1
+        if lane1Counter >= laneResetValue:
+            lane1Counter = 0
+            lane1 = True
+
+    if (not lane2):
+        lane2Counter +=1
+        if lane2Counter >= laneResetValue:
+            lane2Counter = 0
+            lane2 = True
 
     # Checks Collisions
     for obs in all_obstacles_list:
-        hit = player1.CheckCollide(obs.rect.x, obs.width, obs.rect.y, obs.height,obs.label)
+        hit = player1.CheckCollide(obs.rect.x, obs.width, obs.rect.y, obs.height, obs.label)
         if hit:
-            carryOn = False
+            # carryOn = False
+            print('COLLIDE')
 
 
     # Game Logic
-    all_sprites_list.update()
+    playerList.update()
+    lowObstacleList.update()
+    highObstacleList.update()
+    backdropList.update()
+    ShadowList.update()
 
     # Drawing on Screen
-    screen.fill(GREEN)
+    screen.fill(BLACK)
     pygame.draw.line(screen,BLACK,[SCREENWIDTH/3,0],[SCREENWIDTH/3,SCREENHEIGHT],5)
     pygame.draw.line(screen,BLACK,[2*SCREENWIDTH/3,0],[2*SCREENWIDTH/3,SCREENHEIGHT],5)
 
+
+
+
+
+    # Now let's draw all the sprites in one go. (For now we only have 1 sprite!)
+    backdropList.draw(screen)
+    ShadowList.draw(screen)
+    lowObstacleList.draw(screen)
+    playerList.draw(screen)
+    highObstacleList.draw(screen)
 
     scoreCounter += 1
     if (scoreCounter % 30 == 0):
@@ -317,14 +606,11 @@ while carryOn:
     score_board = font.render(str(score_tracker), True, BLACK)
     screen.blit(score_board, [SCREENWIDTH - 120, 20])
 
-
-    # Now let's draw all the sprites in one go. (For now we only have 1 sprite!)
-    all_sprites_list.draw(screen)
-
     # Refresh Screen
     pygame.display.flip()
 
     # Number of frames per secong e.g. 60
     clock.tick(30)
+
 
 GameOverScreen()
