@@ -62,6 +62,21 @@ class EventFlags:
             if (time.perf_counter() - self.ignore_start_time) > 1:
                 self.ignore = False
 
+        # If another spike happens, reset the timer but don't trigger another event
+        if self.ignore:
+            if self.arduinoReader.y - self.initial_y > self.y_threshold:
+                # Start the timer now
+                self.ignore_start_time = time.perf_counter()
+            if self.arduinoReader.y - self.initial_y < -(self.y_threshold):
+                # Start the timer now
+                self.ignore_start_time = time.perf_counter()
+            if self.arduinoReader.x - self.initial_x > self.y_threshold:
+                # Start the timer now
+                self.ignore_start_time = time.perf_counter()
+            if self.arduinoReader.x - self.initial_x < -(self.y_threshold):
+                # Start the timer now
+                self.ignore_start_time = time.perf_counter()
+
         if not self.ignore:
             if self.arduinoReader.y - self.initial_y > self.y_threshold:
                 self.left_flag = True
@@ -131,9 +146,9 @@ class EventFlags:
 
 def main():
     eventFlags = EventFlags(port='/dev/ttyACM1',
-                            x_threshold=12000,
-                            y_threshold=2000,
-                            z_threshold=3000)
+                            x_threshold=10000,
+                            y_threshold=10000,
+                            z_threshold=10000)
     eventFlags.calibrate()
 
     while 1:
