@@ -27,7 +27,7 @@ clock = pygame.time.Clock()
 
 size = (SCREENWIDTH, SCREENHEIGHT)
 screen = pygame.display.set_mode(size)
-pygame.display.set_caption("GOOMBA RUSH")
+pygame.display.set_caption("GUBA RUSH")
 
 random.seed(None)
 
@@ -144,7 +144,7 @@ class Player(pygame.sprite.Sprite):
 
     def CheckCollide(self,x,w,y,h,label):
 
-        if(abs((self.rect.x -x)) < 100 and self.state != -1*label):
+        if(abs((self.rect.x -x)) < 50 and self.state != -1*label):
             if(y+h-40 >= self.rect.y and y+h-40 <= self.rect.y+self.height) or (y+100 >= self.rect.y and y+100 <= self.rect.y + self.height):
                 return True
 
@@ -374,8 +374,8 @@ def StartScreen():
         w,h =font.size("welcome to")
         screen.blit(buff, [SCREENWIDTH/2 - w/2, 60])
 
-        buff = fontTitle.render("GOOMBA RUSH", True, WHITE)
-        w, h = fontTitle.size("GOOMBA RUSH")
+        buff = fontTitle.render("GUBA RUSH", True, WHITE)
+        w, h = fontTitle.size("GUBA RUSH")
         screen.blit(buff, [SCREENWIDTH/2 - w/2, 90])
 
         buff = font.render("Press Enter To Play", True, WHITE)
@@ -441,7 +441,24 @@ def GameOverScreen(score):
     global secondPlay
     secondPlay = True
 
+    leaders = []
+    with open ("LeaderBoard", "r") as fid:
+        try:
+            for line in fid:
+                a,b = line.split()
+                leaders.append((a + " ", int(b)))
+                print('reaing in')
+        except:
+            pass
 
+    numbersUsers = len(leaders)+1
+    with open ("LeaderBoard", "a") as fid:
+        strbuff1 = "GUBA_" + str(numbersUsers) + ": "
+        strbuff = strbuff1 + str(score) + "\n"
+        fid.write(strbuff)
+        leaders.append((strbuff1, score))
+
+    leaders = sorted(leaders, key = lambda t: t[1], reverse = True)
     while start:
 
         screen.blit(deathBackground,(0, 0))
@@ -458,11 +475,29 @@ def GameOverScreen(score):
         w, h = font.size("Press Enter To Play Again")
         screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 150])
 
-        ScoreStr = "Your Score: " + str(score)
+        ScoreStr = "GUBA_" + str(numbersUsers) + " " +"Score:" + str(score)
         buff = font.render(ScoreStr, True, WHITE)
-        w, h = font.size("Your Score: 10")
+        w, h = font.size("GUBA_" + str(numbersUsers) + "Score: 10")
         screen.blit(buff, [SCREENWIDTH / 2 - w / 2, 210])
 
+        ScoreStr = "< LEADERBOARD > "
+        buff = font.render(ScoreStr, True, WHITE)
+        w, h = font.size("< LEADERBOARD > ")                  
+        screen.blit(buff, [SCREENWIDTH / 4 - w , 150])
+
+        pygame.draw.lines(screen, WHITE, True, ((SCREENWIDTH / 4 - w, 185), (SCREENWIDTH / 4-5, 185)), 4)
+
+        for i in range(len(leaders)):
+            if i <= 7:
+                ScoreStr = str(leaders[i][0])
+                buff = font.render(ScoreStr, True, WHITE)
+                w, h = font.size(ScoreStr)
+                screen.blit(buff, [SCREENWIDTH / 4 - w -60, 190+i*40])
+
+                ScoreStr = str(leaders[i][1])
+                buff = font.render(ScoreStr, True, WHITE)
+                w, h = font.size(ScoreStr)
+                screen.blit(buff, [SCREENWIDTH / 4 - w -40, 190+i*40])
 
         pygame.display.flip()
 
@@ -526,7 +561,6 @@ if arduino:
             while 1:
                 doEventFlags()
 
-    print('hi')
     arduino_thread = myThread(1, "Thread-1", 1)
 
 
@@ -702,9 +736,9 @@ def RunGame():
                 livesCounter -= 1
                 #print('COLLIDE')
                 if livesCounter <=0:
-                    pass # Game Over
-                    # carryOn = False
-                    # break
+                    # pass # Game Over
+                    carryOn = False
+                    break
 
 
         # Game Logic
@@ -731,10 +765,21 @@ def RunGame():
         if (scoreCounter % 30 == 0):
             score += 1
         score_tracker = "Score: " + str(score)
-        w, h = fontScore.size("Score: 10")
+        w, h = fontScore.size("Score: 100")
         score_board = fontScore.render(str(score_tracker), True, BLACK)
         screen.blit(score_board, [SCREENWIDTH - w - 10, 20])
 
+        # score_tracker = "Action: "
+        # w, h = fontScore.size("Action: ")
+        # score_board = fontScore.render(str(score_tracker), True, BLACK)
+        # screen.blit(score_board, [SCREENWIDTH-w - 200, 20])
+
+        # if eventFlags.ignore and eventFlags.ignore_gy:
+        #     indicateColour = RED
+        # else:
+        #     indicateColour = GREEN
+        # pygame.draw.circle(screen,indicateColour,(SCREENWIDTH-w - 55,60),10)
+        
         for i in range(0,livesCounter):
             screen.blit(heart,(40 + 100*i, 20))
 
