@@ -1,10 +1,10 @@
-import pygame, random
+import pygame, random, threading
 
 from EventFlags import EventFlags
 
 pygame.init()
 
-arduino =True
+arduino = True
 
 GREEN = (20, 255, 140)
 GREY = (210, 210, 210)
@@ -53,10 +53,12 @@ heart = pygame.image.load("Sprites/heart.png").convert_alpha()
 background = pygame.image.load("Sprites/background.png").convert()
 deathBackground = pygame.image.load("Sprites/dead_background.png").convert()
 
+jumpSound = pygame.mixer.Sound('Sprites/jumpSound.wav')
+
 class Angel(pygame.sprite.Sprite):
 
     # Constructor. Pass in the color of the block,
-    # and its x and y position
+    # and its x and y positiongit
     def __init__(self):
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
@@ -128,7 +130,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = self.lanePos[self.lane]
 
     def Jump(self):
-        print('Jump')
+        jumpSound.play()
         self.rect.y -=0.5
         self.state = 1
 
@@ -154,11 +156,9 @@ class Player(pygame.sprite.Sprite):
                 # This means he is jumping
 
                 if (self.rect.y < SCREENHEIGHT - 160):
-                    print('in the air')
                     self.image = jumpGoomba
                     self.rect.y -= 30 -1.8*self.counter
                 else:
-                    print('not in the air but still jump')
                     self.costumeCount += 1
                     if self.costumeCount % 5 == 0:
                         if self.costumeState == 0:
@@ -172,7 +172,6 @@ class Player(pygame.sprite.Sprite):
             elif (self.state == -1):
                 # This means he is ducking
                 if self.counter >= self.actionTime - 10:
-                    print('not lying but still duck')
                     self.costumeCount += 1
                     if self.costumeCount % 5 == 0:
                         if self.costumeState == 0:
@@ -182,10 +181,8 @@ class Player(pygame.sprite.Sprite):
                         self.image = self.costumes[self.costumeState]
                     self.rect.y = SCREENHEIGHT - 160
                 else:
-                    print('duck')
                     self.image = duckGoomba
         else:
-            print('running')
             # This means he is running
             self.costumeCount +=1
             if self.costumeCount % 5 == 0:
@@ -489,13 +486,44 @@ backdropList.add(backdrop1)
 backdropList.add(backdrop2)
 
 
+
 if arduino:
     eventFlags = EventFlags(port='/dev/tty.usbmodem14101',
                             x_threshold = 3000,
                             y_threshold = 3000,
                             z_threshold = 3000)
 
+    def doEventFlags():
+        eventFlags.check()
+        if eventFlags.up():
+            events.append('up')
+        if eventFlags.down():
+            events.append('down')
+        if eventFlags.left():
+            events.append('left')
+        if eventFlags.right():
+            events.append('right')
+
+
+    class myThread(threading.Thread):
+        def __init__(self, threadID, name, counter):
+            threading.Thread.__init__(self)
+            self.threadID = threadID
+            self.name = name
+            self.counter = counter
+
+        def run(self):
+            print("Starting " + self.name)
+            while 1:
+                doEventFlags()
+
+    print('hi')
+    arduino_thread = myThread(1, "Thread-1", 1)
+
+
 playerList.add(player1)
+
+events = []
 
 
 # Allowing the user to close the window...
@@ -520,10 +548,10 @@ def RunGame():
     StartScreen()
     CalibrateScreen()
 
+    arduino_thread.start()
 
     while carryOn:
-        if arduino:
-            eventFlags.check()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 carryOn = False
@@ -538,15 +566,18 @@ def RunGame():
                     player1.Duck()
 
         if arduino:
-            if eventFlags.left():
-                player1.ChangeLane('left')
-                print('yoooo')
-            elif eventFlags.right():
-                player1.ChangeLane('right')
-            elif eventFlags.up():
-                player1.Jump()
-            elif eventFlags.down():
-                player1.Duck()
+            global events
+            for event in events:
+                if event == 'left':
+                    player1.ChangeLane('left')
+                elif event == 'right':
+                    player1.ChangeLane('right')
+                elif event == 'up':
+                    player1.Jump()
+                elif event == 'down':
+                    player1.Duck()
+            events = []
+
 
         # Handles addition of obstacles
         rand = random.randint(0,1000)
@@ -658,7 +689,7 @@ def RunGame():
                 all_obstacles_list.remove(obs)
                 hit = False
                 livesCounter -= 1
-                print('COLLIDE')
+                #print('COLLIDE')
                 if livesCounter <=0:
                     pass # Game Over
                     # carryOn = False
@@ -700,7 +731,7 @@ def RunGame():
         pygame.display.flip()
 
         # Number of frames per secong e.g. 60
-        clock.tick(30)
+        clock.tick(400)
 
 
     GameOverScreen(score)
