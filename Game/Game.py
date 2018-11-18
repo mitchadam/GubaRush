@@ -4,7 +4,7 @@ from EventFlags import EventFlags
 
 pygame.init()
 
-arduino =False
+arduino =True
 
 GREEN = (20, 255, 140)
 GREY = (210, 210, 210)
