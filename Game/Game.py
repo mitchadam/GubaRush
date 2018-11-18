@@ -13,6 +13,8 @@ RED = (255, 0, 0)
 PURPLE = (255, 0, 255)
 BLACK = (0, 0, 0)
 
+secondPlay = False
+
 FALLSPEED = 8
 
 OBJECTPROB = 10
@@ -143,7 +145,7 @@ class Player(pygame.sprite.Sprite):
     def CheckCollide(self,x,w,y,h,label):
 
         if(abs((self.rect.x -x)) < 100 and self.state != -1*label):
-            if(y+h >= self.rect.y + 10 and y+h <= self.rect.y+self.height) or (y >= self.rect.y and y <= self.rect.y + self.height-15):
+            if(y+h-40 >= self.rect.y and y+h-40 <= self.rect.y+self.height) or (y+100 >= self.rect.y and y+100 <= self.rect.y + self.height):
                 return True
 
         return False
@@ -436,6 +438,9 @@ def GameOverScreen(score):
 
     angelList.add(angelGoomba)
 
+    global secondPlay
+    secondPlay = True
+
 
     while start:
 
@@ -550,9 +555,10 @@ def RunGame():
     laneResetValue = 600/FALLSPEED
 
     StartScreen()
-    CalibrateScreen()
+    if not secondPlay:
+        CalibrateScreen()
 
-    if arduino:
+    if arduino and not secondPlay:
         arduino_thread.start()
 
     while carryOn:
