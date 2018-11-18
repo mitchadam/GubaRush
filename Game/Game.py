@@ -42,7 +42,7 @@ fullGoomba = pygame.transform.scale(fullGoomba,(300,300))
 run1Goomba = pygame.image.load("Sprites/backRun.png").convert_alpha()
 run2Goomba = pygame.image.load("Sprites/backRun2.png").convert_alpha()
 jumpGoomba = pygame.image.load("Sprites/jump.png").convert_alpha()
-duckGoomba = pygame.image.load("Sprites/duck.png").convert_alpha()
+duckGoomba = pygame.image.load("Sprites/duck2.png").convert_alpha()
 obstacleLow = pygame.image.load("Sprites/obstacle_low.png").convert_alpha()
 obstacleHigh = pygame.image.load("Sprites/obstacle_high.png").convert_alpha()
 obstacleLowShadow = pygame.image.load("Sprites/obstacle_low_shadow.png").convert_alpha()
@@ -128,7 +128,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = self.lanePos[self.lane]
 
     def Jump(self):
-
+        print('Jump')
         self.rect.y -=0.5
         self.state = 1
 
@@ -139,7 +139,7 @@ class Player(pygame.sprite.Sprite):
     def CheckCollide(self,x,w,y,h,label):
 
         if(abs((self.rect.x -x)) < 100 and self.state != -1*label):
-            if(y+h >= self.rect.y and y+h <= self.rect.y+self.height) or (y >= self.rect.y and y <= self.rect.y + self.height-15):
+            if(y+h >= self.rect.y + 10 and y+h <= self.rect.y+self.height) or (y >= self.rect.y and y <= self.rect.y + self.height-15):
                 return True
 
         return False
@@ -152,15 +152,40 @@ class Player(pygame.sprite.Sprite):
                 self.counter =0
             if(self.state == 1):
                 # This means he is jumping
-                self.image = jumpGoomba
 
                 if (self.rect.y < SCREENHEIGHT - 160):
-                    self.rect.y -= 5 -0.26*self.counter
+                    print('in the air')
+                    self.image = jumpGoomba
+                    self.rect.y -= 30 -1.8*self.counter
+                else:
+                    print('not in the air but still jump')
+                    self.costumeCount += 1
+                    if self.costumeCount % 5 == 0:
+                        if self.costumeState == 0:
+                            self.costumeState = 1
+                        elif self.costumeState == 1:
+                            self.costumeState = 0
+                        self.image = self.costumes[self.costumeState]
+                    self.rect.y = SCREENHEIGHT - 160
+
 
             elif (self.state == -1):
-                #This means he is ducking
-                self.image = duckGoomba
+                # This means he is ducking
+                if self.counter >= self.actionTime - 10:
+                    print('not lying but still duck')
+                    self.costumeCount += 1
+                    if self.costumeCount % 5 == 0:
+                        if self.costumeState == 0:
+                            self.costumeState = 1
+                        elif self.costumeState == 1:
+                            self.costumeState = 0
+                        self.image = self.costumes[self.costumeState]
+                    self.rect.y = SCREENHEIGHT - 160
+                else:
+                    print('duck')
+                    self.image = duckGoomba
         else:
+            print('running')
             # This means he is running
             self.costumeCount +=1
             if self.costumeCount % 5 == 0:
@@ -262,7 +287,7 @@ class InAir(pygame.sprite.Sprite):
         self.height = 150
         self.image = pygame.Surface([self.width, self.height])
 
-        self.lanePos = [(SCREENWIDTH / 6)-self.newWidth/2, (SCREENWIDTH / 2)-self.newWidth/2, (5 * (SCREENWIDTH / 6))-self.newWidth/2]
+        self.lanePos = [(SCREENWIDTH / 6)-self.newWidth/2-15, (SCREENWIDTH / 2)-self.newWidth/2-15, (5 * (SCREENWIDTH / 6))-self.newWidth/2-15]
         self.rect = self.image.get_rect()
         self.rect.y = -200
         self.image = obstacleHigh
@@ -526,6 +551,8 @@ def RunGame():
         # Handles addition of obstacles
         rand = random.randint(0,1000)
         shadowshift = 15
+        shadowshift2 = 3
+
 
 
         if (rand< OBJECTPROB and  lane0):
@@ -546,7 +573,7 @@ def RunGame():
                 obstacleShadow = InAirShadow()
 
                 obstacle.rect.x = obstacle.lanePos[0]
-                obstacleShadow.rect.x = obstacleShadow.lanePos[0] + shadowshift
+                obstacleShadow.rect.x = obstacleShadow.lanePos[0] + shadowshift2
 
                 highObstacleList.add(obstacle)
                 ShadowList.add(obstacleShadow)
@@ -572,7 +599,7 @@ def RunGame():
                 obstacleShadow = InAirShadow()
 
                 obstacle.rect.x = obstacle.lanePos[1]
-                obstacleShadow.rect.x = obstacleShadow.lanePos[1] + shadowshift
+                obstacleShadow.rect.x = obstacleShadow.lanePos[1] + shadowshift2
 
                 highObstacleList.add(obstacle)
                 ShadowList.add(obstacleShadow)
@@ -597,7 +624,7 @@ def RunGame():
                 obstacleShadow = InAirShadow()
 
                 obstacle.rect.x = obstacle.lanePos[2]
-                obstacleShadow.rect.x = obstacleShadow.lanePos[2] + shadowshift
+                obstacleShadow.rect.x = obstacleShadow.lanePos[2] + shadowshift2
 
                 highObstacleList.add(obstacle)
                 ShadowList.add(obstacleShadow)
@@ -634,8 +661,8 @@ def RunGame():
                 print('COLLIDE')
                 if livesCounter <=0:
                     pass # Game Over
-                    carryOn = False
-                    break
+                    # carryOn = False
+                    # break
 
 
         # Game Logic
