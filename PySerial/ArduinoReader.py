@@ -1,10 +1,14 @@
+""" Class to read accelerometer data from serial port
+    See main() for example usage
+"""
+
+
 import serial
 
 
 class ArduinoReader:
-    def __init__(self):
-        #TODO: don't hard code port
-        self.ser = serial.Serial('/dev/ttyACM1')
+    def __init__(self, port):
+        self.ser = serial.Serial(port)
         self.current_position = 0
         self.x = self.y = self.z = 0
 
@@ -48,7 +52,7 @@ class ArduinoReader:
 
 
 def main():
-    arduinoReader = ArduinoReader()
+    arduinoReader = ArduinoReader('/dev/ttyACM1')
 
     while 1:
         arduinoReader.read()
