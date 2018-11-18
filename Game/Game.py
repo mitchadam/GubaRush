@@ -4,7 +4,7 @@ from EventFlags import EventFlags
 
 pygame.init()
 
-arduino = False
+arduino = True
 
 GREEN = (20, 255, 140)
 GREY = (210, 210, 210)
@@ -58,6 +58,8 @@ deathBackground = pygame.image.load("Sprites/dead_background.png").convert()
 jumpSound = pygame.mixer.Sound('Sprites/jumpSound.wav')
 slideSound = pygame.mixer.Sound('Sprites/slideSound2.wav')
 overSound = pygame.mixer.Sound('Sprites/GameOver.wav')
+CrashSound = pygame.mixer.Sound('Sprites/Crash.wav')
+
 
 pygame.mixer.music.load('Sprites/Background.wav')
 pygame.mixer.music.play(-1)
@@ -740,6 +742,7 @@ def RunGame():
                 all_obstacles_list.remove(obs)
                 hit = False
                 livesCounter -= 1
+                CrashSound.play()
                 #print('COLLIDE')
                 if livesCounter <=0:
                     # pass # Game Over
@@ -798,3 +801,4 @@ def RunGame():
 
     GameOverScreen(score)
 RunGame()
+# MADE IT TO 8 HUNNNA BOII
