@@ -3,6 +3,8 @@
 
 RH_ASK driver;
 
+//Connect Data to Digital Pin 12
+//Connect Ground and VCC to Ground, 5V
 void setup()
 {
     Serial.begin(9600);   // Debugging only
