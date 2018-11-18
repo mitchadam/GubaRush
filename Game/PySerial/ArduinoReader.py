@@ -11,6 +11,7 @@ class ArduinoReader:
         self.ser = serial.Serial(port)
         self.current_position = 0
         self.x = self.y = self.z = 0
+        self.gx = self.gy = self.gz = 0
 
 
     def read(self):
@@ -47,6 +48,27 @@ class ArduinoReader:
                 # Bad int
                 self.ser.flush()
             self.current_position += 1
+        elif self.current_position == 4:
+            try:
+                self.gx = int(word)
+            except:
+                # Bad int
+                self.ser.flush()
+            self.current_position += 1
+        elif self.current_position == 5:
+            try:
+                self.gy = int(word)
+            except:
+                # Bad int
+                self.ser.flush()
+            self.current_position += 1
+        elif self.current_position == 6:
+            try:
+                self.gz = int(word)
+            except:
+                # Bad int
+                self.ser.flush()
+            self.current_position += 1
         else:
             pass
 
@@ -56,7 +78,8 @@ def main():
 
     while 1:
         arduinoReader.read()
-        print('{}, {}, {}'.format(arduinoReader.x, arduinoReader.y, arduinoReader.z))
+        print('Ax:{}, Ay:{}, Az{}, Gx:{}, Gy:{}, Gz:{}'.format(arduinoReader.x, arduinoReader.y, arduinoReader.z,
+                                                               arduinoReader.gx, arduinoReader.gy, arduinoReader.gz))
 
 
 
