@@ -1,8 +1,8 @@
 #include<Wire.h>
-#include <RH_ASK.h>
+
 #include <SPI.h> // Not actually used but needed to compile
 
-RH_ASK driver;
+
 const int MPU_address = 0x68; // I2C 7-bit address AD0 pin plugged into ground
 int16_t AcX,AcY,AcZ;
 
@@ -26,8 +26,7 @@ int16_t AcX,AcY,AcZ;
 void setup() {
 
 Serial.begin(9600);   // Debugging only
-    if (!driver.init())
-         Serial.println("init failed");
+    
 
   
   Wire.begin(); // join the Arduino and MPU together 
@@ -58,37 +57,28 @@ void loop() {
     inputVariable[0] = Wire.read()<<8|Wire.read(); //AcX
     inputVariable[1] = Wire.read()<<8|Wire.read(); //AcY
     inputVariable[2] = Wire.read()<<8|Wire.read(); //AcZ
-    Serial.print("AcX = "); Serial.println(inputVariable[0]);
-    Serial.print("AcY = "); Serial.println(inputVariable[1]);
-    Serial.print("AcZ = "); Serial.println(inputVariable[2]);
+    Serial.println("start");
+    //Serial.print("AcX = "); 
+    Serial.println(inputVariable[0]);
+    //Serial.print("AcY = "); 
+    Serial.println(inputVariable[1]);
+    //Serial.print("AcZ = "); 
+    Serial.println(inputVariable[2]);
 
       
     Tmp = Wire.read()<<8|Wire.read();
     inputVariable[3] = Wire.read()<<8|Wire.read(); // GyX
     inputVariable[4] = Wire.read()<<8|Wire.read(); // GyY
     inputVariable[5] = Wire.read()<<8|Wire.read(); // GyZ
-    Serial.print("GyX = "); Serial.println(inputVariable[3]);
-    Serial.print("GyY = "); Serial.println(inputVariable[4]);
-    Serial.print("GyZ = "); Serial.println(inputVariable[5]);
+    //Serial.print("GyX = "); 
+    Serial.println(inputVariable[3]);
+    //Serial.print("GyY = "); 
+    Serial.println(inputVariable[4]);
+    //Serial.print("GyZ = "); 
+    Serial.println(inputVariable[5]);
+    Serial.println("end");
 
 
-//Code From Transmitter 
-
-
-/*
-    inputVariable[0] = 1;
-    inputVariable[1] = 3;
-    inputVariable[2] = 4;
-
-    Serial.println(inputVariable[0]);
-    Serial.println(inputVariable[1]);
-    Serial.println(inputVariable[2]);
-
-*/
-
-    // Send 12 chars (same size as 6 int16's)
-    driver.send((char*)inputVariable, 12);
-    driver.waitPacketSent();
 
 
 

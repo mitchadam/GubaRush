@@ -156,7 +156,7 @@ class EventFlags:
 
 
 def main():
-    eventFlags = EventFlags(port='/dev/ttyACM1',
+    eventFlags = EventFlags(port='/dev/cu.usbmodem14101',
                             up_threshold=10000,
                             down_threshold=10000,
                             gy_threshold=750)

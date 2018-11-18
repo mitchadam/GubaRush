@@ -8,6 +8,8 @@ import time
 from ArduinoReader import ArduinoReader
 
 
+
+
 class EventFlags:
     def __init__(self, **kwargs):
         self.arduinoReader = ArduinoReader(kwargs['port'])
@@ -24,6 +26,11 @@ class EventFlags:
         self.ignore_gy = False
         self.ignore_start_time = time.perf_counter()
         self.ignore_gy_start_time = time.perf_counter()
+        self.record = True
+        self.printS = True
+        self.positiveCount = 0
+        self.negativeCount = 0
+        self.timeCount = 0
 
 
     def calibrate(self):
@@ -42,6 +49,7 @@ class EventFlags:
         z_readings = 0
         gy_readings = 0
         while ((time.perf_counter() - start_time) < 5):
+            print(time.perf_counter() - start_time)
             self.arduinoReader.read()
             x_readings += self.arduinoReader.x
             y_readings += self.arduinoReader.y
@@ -62,7 +70,28 @@ class EventFlags:
         """ Checks if event thresholds have been reached
             Should be called in a loop
         """
+
+
+
         self.arduinoReader.read()
+
+       ''' if(self.record):
+            self.timeCount = time.perf_counter()
+            self.record = False
+        if(time.perf_counter() - self.timeCount < 2):
+            if(self.arduinoReader.x - self.initial_x > 0):
+                self.positiveCount+=1
+            else:
+                self.negativeCount +=1
+        else:
+            self.printS = True
+            if(self.printS):
+                print("positiveCount" , self.positiveCount, " neagtiveCount" , self.negativeCount)
+                self.record = True
+                self.positiveCount = 0
+                self.negativeCount = 0
+                self.printS = False'''
+            
 
         if self.ignore:
             # Check if enough time has passed to start accepting
@@ -92,19 +121,12 @@ class EventFlags:
                 self.ignore_gy_start_time = time.perf_counter()"""
 
         ##print(self.arduinoReader.gy);
-        if not self.ignore:
-            if self.arduinoReader.x - self.initial_x > self.up_threshold:
-                self.up_flag = True
-                self.ignore = True
-                # Start the timer now
-                self.ignore_start_time = time.perf_counter()
-                print('up')
-            if self.arduinoReader.x - self.initial_x < -(self.down_threshold):
-                self.down_flag = True
-                self.ignore = True
-                # Start the timer now
-                self.ignore_start_time = time.perf_counter()
-                print('down')
+
+        #print(self.arduinoReader.x)
+
+
+        #if(self.arduinoReader.x - self.initial_x > 3000 or self.arduinoReader.x -self.initial_x <-3000):
+           #print(self.arduinoReader.x- self.initial_x)
         if not self.ignore:
             if self.arduinoReader.gy - self.initial_gy > self.gy_threshold:
                 self.right_flag = True
@@ -112,12 +134,27 @@ class EventFlags:
                 # Start the timer now
                 self.ignore_start_time = time.perf_counter()
                 print('right')
-            if self.arduinoReader.gy - self.initial_gy < -(self.gy_threshold):
+            elif self.arduinoReader.gy - self.initial_gy < -(self.gy_threshold):
                 self.left_flag = True
                 self.ignore = True
                 # Start the timer now
                 self.ignore_start_time = time.perf_counter()
                 print('left')
+        if not self.ignore:
+            if self.arduinoReader.x - self.initial_x > self.up_threshold:
+                self.up_flag = True
+                self.ignore = True
+                # Start the timer now
+                self.ignore_start_time = time.perf_counter()
+                print('up')
+            elif self.arduinoReader.x - self.initial_x < -(self.down_threshold):
+                self.down_flag = True
+                self.ignore = True
+                # Start the timer now
+                self.ignore_start_time = time.perf_counter()
+                print('down')
+
+        
 
 
     def up(self):
@@ -162,10 +199,10 @@ class EventFlags:
 
 def main():
     eventFlags = EventFlags(port='/dev/cu.usbmodem14101',
-                            up_threshold=10000,
-                            down_threshold=10000,
-                            gy_threshold=10000,
-                            up_down_delay=1,
+                            up_threshold=3000,
+                            down_threshold=3000,
+                            gy_threshold=2000,
+                            up_down_delay=1.5,
                             left_right_delay=1)
     eventFlags.calibrate()
 
