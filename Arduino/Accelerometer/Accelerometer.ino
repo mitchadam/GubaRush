@@ -40,9 +40,11 @@ void loop() {
     AcX = Wire.read()<<8|Wire.read();
     AcY = Wire.read()<<8|Wire.read();
     AcZ = Wire.read()<<8|Wire.read();
-    Serial.print("AcX = "); Serial.println(AcX);
-    Serial.print("AcY = "); Serial.println(AcY);
-    Serial.print("AcZ = "); Serial.println(AcZ);
+    Serial.println("start");
+    Serial.println(AcX);
+    Serial.println(AcY);
+    Serial.println(AcZ);
+    Serial.println("end");
     /*Tmp = Wire.read()<<8|Wire.read();
     GyX = Wire.read()<<8|Wire.read();
     GyY = Wire.read()<<8|Wire.read();
