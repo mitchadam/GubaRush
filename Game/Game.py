@@ -4,7 +4,7 @@ from EventFlags import EventFlags
 
 pygame.init()
 
-arduino =True
+arduino =False
 
 GREEN = (20, 255, 140)
 GREY = (210, 210, 210)
@@ -154,11 +154,11 @@ class Player(pygame.sprite.Sprite):
                 # This means he is jumping
 
                 if (self.rect.y < SCREENHEIGHT - 160):
-                    print('in the air')
+
                     self.image = jumpGoomba
                     self.rect.y -= 30 -1.8*self.counter
                 else:
-                    print('not in the air but still jump')
+
                     self.costumeCount += 1
                     if self.costumeCount % 5 == 0:
                         if self.costumeState == 0:
@@ -172,7 +172,7 @@ class Player(pygame.sprite.Sprite):
             elif (self.state == -1):
                 # This means he is ducking
                 if self.counter >= self.actionTime - 10:
-                    print('not lying but still duck')
+
                     self.costumeCount += 1
                     if self.costumeCount % 5 == 0:
                         if self.costumeState == 0:
@@ -182,10 +182,10 @@ class Player(pygame.sprite.Sprite):
                         self.image = self.costumes[self.costumeState]
                     self.rect.y = SCREENHEIGHT - 160
                 else:
-                    print('duck')
+
                     self.image = duckGoomba
         else:
-            print('running')
+
             # This means he is running
             self.costumeCount +=1
             if self.costumeCount % 5 == 0:
@@ -540,7 +540,6 @@ def RunGame():
         if arduino:
             if eventFlags.left():
                 player1.ChangeLane('left')
-                print('yoooo')
             elif eventFlags.right():
                 player1.ChangeLane('right')
             elif eventFlags.up():
