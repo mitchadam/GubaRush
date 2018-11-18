@@ -18,7 +18,9 @@ class EventFlags:
         self.gy_threshold = kwargs['gy_threshold']
 
         self.ignore = False
+        self.ignore_gy = False
         self.ignore_start_time = time.perf_counter()
+        self.ignore_gy_start_time = time.perf_counter()
 
 
     def calibrate(self):
@@ -64,34 +66,40 @@ class EventFlags:
             # motions again
             if (time.perf_counter() - self.ignore_start_time) > 1:
                 self.ignore = False
+        if self.ignore_gy:
+            # Check if enough time has passed to start accepting
+            # motions again
+            if (time.perf_counter() - self.ignore_gy_start_time) > 1:
+                self.ignore_gy = False
 
         # If another spike happens, reset the timer but don't trigger another event
         if self.ignore:
-            if self.arduinoReader.gy - self.initial_gy > self.gy_threshold:
-                # Start the timer now
-                self.ignore_start_time = time.perf_counter()
-            if self.arduinoReader.gy - self.initial_gy < -(self.gy_threshold):
-                # Start the timer now
-                self.ignore_start_time = time.perf_counter()
             if self.arduinoReader.x - self.initial_x > self.up_threshold:
                 # Start the timer now
                 self.ignore_start_time = time.perf_counter()
             if self.arduinoReader.x - self.initial_x < -(self.down_threshold):
                 # Start the timer now
                 self.ignore_start_time = time.perf_counter()
+        if self.ignore_gy:
+            if self.arduinoReader.gy - self.initial_gy > self.gy_threshold:
+                # Start the timer now
+                self.ignore_gy_start_time = time.perf_counter()
+            if self.arduinoReader.gy - self.initial_gy < -(self.gy_threshold):
+                # Start the timer now
+                self.ignore_gy_start_time = time.perf_counter()
 
         if not self.ignore:
             if self.arduinoReader.gy - self.initial_gy > self.gy_threshold:
                 self.right_flag = True
-                self.ignore = True
+                self.ignore_gy = True
                 # Start the timer now
-                self.ignore_start_time = time.perf_counter()
+                self.ignore_gy_start_time = time.perf_counter()
                 print('right')
             if self.arduinoReader.gy - self.initial_gy < -(self.gy_threshold):
                 self.left_flag = True
-                self.ignore = True
+                self.ignore_gy = True
                 # Start the timer now
-                self.ignore_start_time = time.perf_counter()
+                self.ignore_gy_start_time = time.perf_counter()
                 print('left')
             if self.arduinoReader.x - self.initial_x > self.up_threshold:
                 self.up_flag = True
