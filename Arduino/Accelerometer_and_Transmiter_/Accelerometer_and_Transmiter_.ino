@@ -46,12 +46,13 @@ Serial.begin(9600);   // Debugging only
 }
 
 void loop() {
-int16_t inputVariable[3];
+  int16_t inputVariable[6];
+  int16_t Tmp;
 
     Wire.beginTransmission(MPU_address);
     Wire.write(0x3B); // starting with regoster 0x3B (ACCEL_XOUT_H)
     Wire.endTransmission(false);
-    Wire.requestFrom(MPU_address,6,true); //request 14 registers, 3 Ac, 3 Gyro, 1 temp each 2 registers
+    Wire.requestFrom(MPU_address,14,true); //request 14 registers, 3 Ac, 3 Gyro, 1 temp each 2 registers
      // read bits 15-0 in groups of 8 bits (bits 15-8 shifted over 8 bits)
      // read Accelerometer values
     inputVariable[0] = Wire.read()<<8|Wire.read(); //AcX
@@ -60,6 +61,15 @@ int16_t inputVariable[3];
     Serial.print("AcX = "); Serial.println(inputVariable[0]);
     Serial.print("AcY = "); Serial.println(inputVariable[1]);
     Serial.print("AcZ = "); Serial.println(inputVariable[2]);
+
+      
+    Tmp = Wire.read()<<8|Wire.read();
+    inputVariable[3] = Wire.read()<<8|Wire.read(); // GyX
+    inputVariable[4] = Wire.read()<<8|Wire.read(); // GyY
+    inputVariable[5] = Wire.read()<<8|Wire.read(); // GyZ
+    Serial.print("GyX = "); Serial.println(inputVariable[3]);
+    Serial.print("GyY = "); Serial.println(inputVariable[4]);
+    Serial.print("GyZ = "); Serial.println(inputVariable[5]);
 
 
 //Code From Transmitter 
@@ -76,16 +86,12 @@ int16_t inputVariable[3];
 
 */
 
-    // Send 6 chars (same size as 3 int16's)
-    driver.send((char*)inputVariable, 6);
+    // Send 12 chars (same size as 6 int16's)
+    driver.send((char*)inputVariable, 12);
     driver.waitPacketSent();
 
 
 
-  
-    /*Tmp = Wire.read()<<8|Wire.read();
-    GyX = Wire.read()<<8|Wire.read();
-    GyY = Wire.read()<<8|Wire.read();
-    GyZ = Wire.read()<<8|Wire.read();*/    
+
     delay(50);
 }
