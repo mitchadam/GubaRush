@@ -57,6 +57,7 @@ deathBackground = pygame.image.load("Sprites/dead_background.png").convert()
 
 jumpSound = pygame.mixer.Sound('Sprites/jumpSound.wav')
 slideSound = pygame.mixer.Sound('Sprites/slideSound2.wav')
+overSound = pygame.mixer.Sound('Sprites/GameOver.wav')
 
 pygame.mixer.music.load('Sprites/Background.wav')
 pygame.mixer.music.play(-1)
@@ -435,6 +436,9 @@ def CalibrateScreen():
 def GameOverScreen(score):
     start = True
 
+    overSound.play()
+    pygame.mixer.music.stop()
+
     angelGoomba = Angel()
     angelList = pygame.sprite.Group()
 
@@ -532,7 +536,7 @@ backdropList.add(backdrop2)
 
 
 if arduino:
-    eventFlags = EventFlags(port='/dev/tty.usbmodem14101',
+    eventFlags = EventFlags(port='/dev/tty.usbmodem14201',
                             up_threshold = 3000,
                             down_threshold = 4000,
                             gy_threshold = 2500,
