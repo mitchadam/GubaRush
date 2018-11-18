@@ -25,9 +25,10 @@ void loop()
     if (driver.recv(buf, &buflen)) // Non-blocking
     {
       integers = (int16_t*) buf; // point integers at buf so that the data is read as int16's 
-      Serial.print("Message: ");
+      Serial.println("start");
       Serial.println(integers[0]);  
       Serial.println(integers[1]);  
-      Serial.println(integers[2]);         
+      Serial.println(integers[2]);
+      Serial.println("end");      
     }
 }
