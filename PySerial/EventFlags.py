@@ -8,10 +8,6 @@ import time
 from ArduinoReader import ArduinoReader
 
 
-def average(array):
-    return sum(array) / len(array)
-
-
 class EventFlags:
     def __init__(self, **kwargs):
         self.arduinoReader = ArduinoReader(kwargs['port'])
@@ -34,20 +30,21 @@ class EventFlags:
         # Get time as a float in seconds
         start_time = time.perf_counter()
 
-        x_readings = []
-        y_readings = []
-        z_readings = []
-
-        # Wait 5 seconds for serial data to arrive
+        # Get baseline values by averaging over 5 seconds
+        count = 0
+        x_readings = 0
+        y_readings = 0
+        z_readings = 0
         while ((time.perf_counter() - start_time) < 5):
             self.arduinoReader.read()
-            x_readings += [self.arduinoReader.x]
-            y_readings += [self.arduinoReader.y]
-            z_readings += [self.arduinoReader.z]
+            x_readings += self.arduinoReader.x
+            y_readings += self.arduinoReader.y
+            z_readings += self.arduinoReader.z
+            count += 1
 
-        self.initial_x = average(x_readings)
-        self.initial_y = average(y_readings)
-        self.initial_z = average(z_readings)
+        self.initial_x = x_readings / count
+        self.initial_y = y_readings / count
+        self.initial_z = z_readings / count
 
         print('{}, {}, {}'.format(self.initial_x, self.initial_y,
                                   self.initial_z))
