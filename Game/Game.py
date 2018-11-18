@@ -4,7 +4,7 @@ from EventFlags import EventFlags
 
 pygame.init()
 
-arduino = True
+arduino = False
 
 GREEN = (20, 255, 140)
 GREY = (210, 210, 210)
@@ -56,8 +56,10 @@ background = pygame.image.load("Sprites/background.png").convert()
 deathBackground = pygame.image.load("Sprites/dead_background.png").convert()
 
 jumpSound = pygame.mixer.Sound('Sprites/jumpSound.wav')
-slideSound = pygame.mixer.Sound('Sprites/slideSound.wav')
+slideSound = pygame.mixer.Sound('Sprites/slideSound2.wav')
 
+pygame.mixer.music.load('Sprites/Background.wav')
+pygame.mixer.music.play(-1)
 
 class Angel(pygame.sprite.Sprite):
 
@@ -139,7 +141,7 @@ class Player(pygame.sprite.Sprite):
         self.state = 1
 
     def Duck(self):
-        #slideSound.play()
+        slideSound.play()
         self.state = -1
 
     def CheckCollide(self,x,w,y,h,label):
