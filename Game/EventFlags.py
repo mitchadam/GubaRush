@@ -13,14 +13,17 @@ class EventFlags:
         self.arduinoReader = ArduinoReader(kwargs['port'])
         self.up_flag = self.down_flag = self.left_flag = self.right_flag = False
 
-        self.x_threshold = kwargs['x_threshold']
-        self.y_threshold = kwargs['y_threshold']
-        self.z_threshold = kwargs['z_threshold']
+        self.up_threshold = kwargs['up_threshold']
+        self.down_threshold = kwargs['down_threshold']
+        self.gy_threshold = kwargs['gy_threshold']
+
+        self.up_down_delay = kwargs['up_down_delay']
+        self.left_right_delay = kwargs['left_right_delay']
 
         self.ignore = False
+        self.ignore_gy = False
         self.ignore_start_time = time.perf_counter()
-
-        self.counter = 0
+        self.ignore_gy_start_time = time.perf_counter()
 
 
     def calibrate(self):
@@ -37,71 +40,78 @@ class EventFlags:
         x_readings = 0
         y_readings = 0
         z_readings = 0
+        gy_readings = 0
         while ((time.perf_counter() - start_time) < 5):
             self.arduinoReader.read()
             x_readings += self.arduinoReader.x
             y_readings += self.arduinoReader.y
             z_readings += self.arduinoReader.z
+            gy_readings += self.arduinoReader.gy
             count += 1
 
         self.initial_x = x_readings / count
         self.initial_y = y_readings / count
         self.initial_z = z_readings / count
+        self.initial_gy = gy_readings / count
 
-        print('{}, {}, {}'.format(self.initial_x, self.initial_y,
-                                  self.initial_z))
+        print('{}, {}, {}, {}'.format(self.initial_x, self.initial_y,
+                                      self.initial_z, self.initial_gy))
         
 
     def check(self):
         """ Checks if event thresholds have been reached
             Should be called in a loop
         """
-        self.counter += 1
-        print(self.counter)
-
         self.arduinoReader.read()
 
         if self.ignore:
             # Check if enough time has passed to start accepting
             # motions again
-            if (time.perf_counter() - self.ignore_start_time) > 1:
+            if (time.perf_counter() - self.ignore_start_time) > self.up_down_delay:
                 self.ignore = False
+        if self.ignore_gy:
+            # Check if enough time has passed to start accepting
+            # motions again
+            if (time.perf_counter() - self.ignore_gy_start_time) > self.left_right_delay:
+                self.ignore_gy = False
 
         # If another spike happens, reset the timer but don't trigger another event
         if self.ignore:
-            if self.arduinoReader.y - self.initial_y > self.y_threshold:
+            if self.arduinoReader.x - self.initial_x > self.up_threshold:
                 # Start the timer now
                 self.ignore_start_time = time.perf_counter()
-            if self.arduinoReader.y - self.initial_y < -(self.y_threshold):
+            if self.arduinoReader.x - self.initial_x < -(self.down_threshold):
                 # Start the timer now
                 self.ignore_start_time = time.perf_counter()
-            if self.arduinoReader.x - self.initial_x > self.y_threshold:
+        if self.ignore_gy:
+            if self.arduinoReader.gy - self.initial_gy > self.gy_threshold:
                 # Start the timer now
-                self.ignore_start_time = time.perf_counter()
-            if self.arduinoReader.x - self.initial_x < -(self.y_threshold):
+                self.ignore_gy_start_time = time.perf_counter()
+            if self.arduinoReader.gy - self.initial_gy < -(self.gy_threshold):
                 # Start the timer now
-                self.ignore_start_time = time.perf_counter()
+                self.ignore_gy_start_time = time.perf_counter()
 
-        if not self.ignore:
-            if self.arduinoReader.y - self.initial_y > self.y_threshold:
-                self.left_flag = True
-                self.ignore = True
-                # Start the timer now
-                self.ignore_start_time = time.perf_counter()
-                print('left')
-            if self.arduinoReader.y - self.initial_y < -(self.y_threshold):
+        if not self.ignore_gy:
+            if self.arduinoReader.gy - self.initial_gy > self.gy_threshold:
                 self.right_flag = True
-                self.ignore = True
+                self.ignore_gy = True
                 # Start the timer now
-                self.ignore_start_time = time.perf_counter()
+                self.ignore_gy_start_time = time.perf_counter()
                 print('right')
-            if self.arduinoReader.x - self.initial_x > self.y_threshold:
+            if self.arduinoReader.gy - self.initial_gy < -(self.gy_threshold):
+                self.left_flag = True
+                self.ignore_gy = True
+                # Start the timer now
+                self.ignore_gy_start_time = time.perf_counter()
+                print('left')
+        if not self.ignore:
+            if self.arduinoReader.x - self.initial_x > self.up_threshold:
                 self.up_flag = True
                 self.ignore = True
                 # Start the timer now
                 self.ignore_start_time = time.perf_counter()
                 print('up')
-            if self.arduinoReader.x - self.initial_x < -(self.y_threshold):
+            if self.arduinoReader.x - self.initial_x < -(self.down_threshold):
                 self.down_flag = True
                 self.ignore = True
                 # Start the timer now
@@ -150,10 +160,10 @@ class EventFlags:
 
 
 def main():
-    eventFlags = EventFlags(port='/dev/tty.usbmodem14101',
-                            x_threshold=10000,
-                            y_threshold=10000,
-                            z_threshold=10000)
+    eventFlags = EventFlags(port='/dev/ttyACM1',
+                            up_threshold=10000,
+                            down_threshold=10000,
+                            gy_threshold=750)
     eventFlags.calibrate()
 
     while 1:

@@ -4,7 +4,7 @@ from EventFlags import EventFlags
 
 pygame.init()
 
-arduino = False
+arduino = True
 
 GREEN = (20, 255, 140)
 GREY = (210, 210, 210)
@@ -491,9 +491,11 @@ backdropList.add(backdrop2)
 
 if arduino:
     eventFlags = EventFlags(port='/dev/tty.usbmodem14101',
-                            x_threshold = 3000,
-                            y_threshold = 3000,
-                            z_threshold = 3000)
+                            up_threshold = 3000,
+                            down_threshold = 3000,
+                            gy_threshold = 2000,
+                            up_down_delay=1,
+                            left_right_delay=1)
 
     def doEventFlags():
         eventFlags.check()
