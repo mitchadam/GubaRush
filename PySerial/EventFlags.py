@@ -8,6 +8,10 @@ import time
 from ArduinoReader import ArduinoReader
 
 
+def average(array):
+    return sum(array) / len(array)
+
+
 class EventFlags:
     def __init__(self, **kwargs):
         self.arduinoReader = ArduinoReader(kwargs['port'])
@@ -30,13 +34,20 @@ class EventFlags:
         # Get time as a float in seconds
         start_time = time.perf_counter()
 
+        x_readings = []
+        y_readings = []
+        z_readings = []
+
         # Wait 5 seconds for serial data to arrive
         while ((time.perf_counter() - start_time) < 5):
             self.arduinoReader.read()
+            x_readings += [self.arduinoReader.x]
+            y_readings += [self.arduinoReader.y]
+            z_readings += [self.arduinoReader.z]
 
-        self.initial_x = self.arduinoReader.x
-        self.initial_y = self.arduinoReader.y
-        self.initial_z = self.arduinoReader.z
+        self.initial_x = average(x_readings)
+        self.initial_y = average(y_readings)
+        self.initial_z = average(z_readings)
 
         print('{}, {}, {}'.format(self.initial_x, self.initial_y,
                                   self.initial_z))
@@ -56,29 +67,29 @@ class EventFlags:
 
         if not self.ignore:
             if self.arduinoReader.y - self.initial_y > self.y_threshold:
-                self.up_flag = True
-                self.ignore = True
-                # Start the timer now
-                self.ignore_start_time = time.perf_counter()
-                print('up')
-            if self.arduinoReader.y - self.initial_y < -(self.y_threshold):
-                self.down_flag = True
-                self.ignore = True
-                # Start the timer now
-                self.ignore_start_time = time.perf_counter()
-                print('down')
-            if self.arduinoReader.x - self.initial_x > self.y_threshold:
                 self.left_flag = True
                 self.ignore = True
                 # Start the timer now
                 self.ignore_start_time = time.perf_counter()
                 print('left')
-            if self.arduinoReader.x - self.initial_x < -(self.y_threshold):
+            if self.arduinoReader.y - self.initial_y < -(self.y_threshold):
                 self.right_flag = True
                 self.ignore = True
                 # Start the timer now
                 self.ignore_start_time = time.perf_counter()
                 print('right')
+            if self.arduinoReader.x - self.initial_x > self.y_threshold:
+                self.up_flag = True
+                self.ignore = True
+                # Start the timer now
+                self.ignore_start_time = time.perf_counter()
+                print('up')
+            if self.arduinoReader.x - self.initial_x < -(self.y_threshold):
+                self.down_flag = True
+                self.ignore = True
+                # Start the timer now
+                self.ignore_start_time = time.perf_counter()
+                print('down')
 
 
     def up(self):
@@ -123,8 +134,8 @@ class EventFlags:
 
 def main():
     eventFlags = EventFlags(port='/dev/ttyACM1',
-                            x_threshold=2000,
-                            y_threshold=12000,
+                            x_threshold=12000,
+                            y_threshold=2000,
                             z_threshold=3000)
     eventFlags.calibrate()
 
