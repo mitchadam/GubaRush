@@ -1,3 +1,2 @@
-# HackedBeta2018
-SICKKK GAMEE 2
+Motion Controlled vertical scrolling game devolped for HackedBeta2018
 
