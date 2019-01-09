@@ -4,6 +4,7 @@ from EventFlags import EventFlags
 
 pygame.init()
 
+
 arduino = True
 
 GREEN = (20, 255, 140)
