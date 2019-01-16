@@ -1,2 +1,2 @@
-Motion Controlled vertical scrolling game devolped for HackedBeta2018
+Motion Controlled video game developed for HackedBeta2018. 
 
